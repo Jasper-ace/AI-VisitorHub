@@ -28,14 +28,11 @@ An advanced security system with iPhone-like Face ID technology that automatical
 
 ### Step 1: Clone the Repository
 ```bash
-# Clone from your repository (replace with your actual repo URL)
-git clone https://github.com/yourusername/avida-visitors-hub.git
-
-# Or if using a different Git service:
-git clone https://gitlab.com/yourusername/avida-visitors-hub.git
+# Clone the AI-VisitorHub repository
+git clone https://github.com/Jasper-ace/AI-VisitorHub.git
 
 # Navigate to project directory
-cd avida-visitors-hub
+cd AI-VisitorHub
 ```
 
 ### Step 2: Set Up Python Environment (Recommended)
@@ -114,7 +111,7 @@ To access from other devices on the same network:
 
 ## 📁 Project Structure
 ```
-avida-visitors-hub/
+AI-VisitorHub/
 ├── app.py                  # Main Flask application
 ├── requirements.txt        # Python dependencies
 ├── README.md              # This file

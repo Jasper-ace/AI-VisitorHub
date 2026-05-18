@@ -1,157 +1,283 @@
-# Visitor Face ID System
-## IAS2 Finals Project — DeepFace + Flask + Face ID Technology
+# Avida Residence New Manila VisitorsHub
+## Advanced Face Recognition Visitor Management System
 
 ---
 
 ## Project Overview
-An advanced security system with iPhone-like Face ID technology that automatically detects faces and uses blink verification for anti-spoofing. No buttons needed - just look at the camera and blink!
+An advanced security system with iPhone-like Face ID technology that automatically detects faces and uses blink verification for anti-spoofing. Designed specifically for **Avida Residence New Manila** with professional lobby-style interface and silent operation.
 
-## ✨ New Face ID Features
+## ✨ Key Features
 - 🔐 **Automatic Face Detection** - No capture button needed
 - 👁️ **Real-time Eye Detection** - Ensures both eyes are visible
 - 🔒 **Blink Verification** - Anti-spoofing protection like iPhone Face ID
 - ⚡ **Instant Recognition** - Seamless user experience
-- 🎯 **Dynamic Face Tracking** - Face box follows detected faces
-- 🛡️ **Liveness Detection** - Prevents photo/video spoofing attacks
-
-## Core Features
-- 📷 **Live webcam face capture** for registration
-- 🔍 **DeepFace-powered recognition** with confidence scoring (VGG-Face model)
-- ✅ **Check-in / Check-out** tracking with timestamps
-- 🚨 **Security alerts** for unrecognized faces
-- 🔒 **Blacklist** management for blocked visitors
-- 📊 **Admin dashboard** with real-time stats, logs, and visitor management
-- 🗄️ **SQLite database** for persistent storage
+- 🛡️ **Person Presence Detection** - Prevents multiple attempts by same person
+- ⏱️ **3-Second Cooldown** - Professional timing controls
+- � **Silent Operation** - Visual feedback only
+- 🏢 **Condominium Branding** - Avida Residence New Manila themed
 
 ---
 
-## Setup Instructions
+## 🚀 Quick Setup (Clone to Other Device)
 
-### 1. Install Python dependencies
+### Prerequisites
+- **Python 3.8+** installed
+- **Git** installed
+- **Webcam/Camera** access
+- **Windows/Mac/Linux** compatible
+
+### Step 1: Clone the Repository
 ```bash
+# Clone from your repository (replace with your actual repo URL)
+git clone https://github.com/yourusername/avida-visitors-hub.git
+
+# Or if using a different Git service:
+git clone https://gitlab.com/yourusername/avida-visitors-hub.git
+
+# Navigate to project directory
+cd avida-visitors-hub
+```
+
+### Step 2: Set Up Python Environment (Recommended)
+```bash
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
+# On Mac/Linux:
+source venv/bin/activate
+```
+
+### Step 3: Install Dependencies
+```bash
+# Install all required packages
 pip install -r requirements.txt
 ```
-> Note: DeepFace + TensorFlow may take a few minutes to install.
+> ⚠️ **Note**: DeepFace + TensorFlow installation may take 5-10 minutes and requires ~2GB download.
 
-### 2. Run the application
+### Step 4: Run the Application
 ```bash
+# Start the Flask server
 python app.py
 ```
 
-### 3. Access the system
-| Page           | URL                             |
-|----------------|---------------------------------|
-| Home           | http://localhost:5000           |
-| Register       | http://localhost:5000/register  |
-| **Face ID Check-In** | http://localhost:5000/checkin   |
-| Admin Login    | http://localhost:5000/admin/login |
+### Step 5: Access the System
+| Page | URL | Description |
+|------|-----|-------------|
+| **Home** | http://localhost:5000 | Main landing page |
+| **Registration** | http://localhost:5000/register | Register new visitors |
+| **Check-In/Out** | http://localhost:5000/checkin | Face ID recognition |
+| **Admin Panel** | http://localhost:5000/admin/login | Management dashboard |
 
-### 4. Admin Credentials
-| Field    | Value      |
-|----------|------------|
-| Username | `admin`    |
-| Password | `admin123` |
-
----
-
-## 🔐 How Face ID Works
-
-### 1. **Face Detection**
-- System continuously scans for faces using OpenCV Haar Cascades
-- Detects face position and draws dynamic tracking box
-- Ensures face is properly positioned and sized
-
-### 2. **Eye Detection & Liveness Check**
-- Detects both eyes to ensure user is facing camera
-- Verifies both eyes are open and visible
-- Prevents spoofing with photos or videos
-
-### 3. **Blink Verification**
-- Prompts user to blink for anti-spoofing
-- Simulates iPhone Face ID liveness detection
-- Only proceeds after successful blink verification
-
-### 4. **Face Recognition**
-- Uses DeepFace AI to match against registered visitors
-- Returns confidence score and visitor information
-- Logs successful/failed attempts with timestamps
+### Step 6: Admin Access
+| Field | Value |
+|-------|-------|
+| **Username** | `admin` |
+| **Password** | `admin123` |
 
 ---
 
-## Project Structure
+## 🌐 Network Setup (Access from Other Devices)
+
+### Local Network Access
+To access from other devices on the same network:
+
+1. **Find your IP address:**
+   ```bash
+   # Windows
+   ipconfig
+   
+   # Mac/Linux
+   ifconfig
+   ```
+
+2. **Update Flask configuration** in `app.py`:
+   ```python
+   if __name__ == "__main__":
+       app.run(host="0.0.0.0", port=5000, debug=True)
+   ```
+
+3. **Access from other devices:**
+   ```
+   http://YOUR_IP_ADDRESS:5000
+   # Example: http://192.168.1.100:5000
+   ```
+
+### Firewall Configuration
+- **Windows**: Allow Python through Windows Firewall
+- **Mac**: System Preferences → Security & Privacy → Firewall
+- **Linux**: Configure iptables or ufw as needed
+
+---
+
+## 📁 Project Structure
 ```
-visitor_system/
-├── app.py                  # Main Flask application with Face ID APIs
+avida-visitors-hub/
+├── app.py                  # Main Flask application
 ├── requirements.txt        # Python dependencies
+├── README.md              # This file
 ├── database/
 │   └── visitors.db         # SQLite database (auto-created)
-├── visitor_faces/          # Stored face photos (auto-created)
-├── logs/                   # Log files (auto-created)
+├── visitor_faces/          # Stored visitor photos (auto-created)
+├── logs/                   # System logs (auto-created)
+├── img/                    # Avida branding assets
+│   ├── logo.png           # Avida Residence logo
+│   └── bg.png             # Background image
 └── templates/
-    ├── base.html           # Base layout with navigation
-    ├── index.html          # Landing page with Face ID branding
-    ├── register.html       # Visitor registration + webcam
-    ├── checkin.html        # Face ID check-in/out (NEW!)
+    ├── base.html           # Base layout template
+    ├── index.html          # Landing page
+    ├── register.html       # Visitor registration
+    ├── checkin.html        # Face ID check-in/out
     ├── admin_login.html    # Admin login
-    └── admin_dashboard.html # Full admin panel
+    └── admin_dashboard.html # Admin management panel
 ```
 
 ---
 
-## Face Recognition Details
-| Setting     | Value         |
-|-------------|---------------|
-| Model       | VGG-Face      |
-| Backend     | OpenCV        |
-| Distance    | Cosine        |
-| Threshold   | Auto (DeepFace default) |
-| **Face Detection** | **Haar Cascades** |
-| **Eye Detection** | **Haar Cascades** |
-| **Anti-Spoofing** | **Blink Verification** |
+## 🔧 Configuration Options
 
-You can change the model in `app.py`:
+### Camera Settings
+In `app.py`, adjust camera resolution:
 ```python
-RECOGNITION_MODEL   = "VGG-Face"   # or: Facenet, ArcFace, Dlib
-RECOGNITION_BACKEND = "opencv"     # or: retinaface, mtcnn, ssd
-RECOGNITION_DISTANCE = "cosine"    # or: euclidean, euclidean_l2
+# Default: 640x480
+video: {width: 640, height: 480}
+
+# HD: 1280x720
+video: {width: 1280, height: 720}
+```
+
+### Face Recognition Model
+```python
+RECOGNITION_MODEL = "VGG-Face"      # Options: VGG-Face, Facenet, ArcFace
+RECOGNITION_BACKEND = "opencv"      # Options: opencv, retinaface, mtcnn
+RECOGNITION_DISTANCE = "cosine"     # Options: cosine, euclidean
+```
+
+### Person Presence Detection
+In `templates/checkin.html`:
+```javascript
+const PERSON_LEFT_THRESHOLD = 5;   // Frames before considering person left
 ```
 
 ---
 
-## API Endpoints
-| Method | Endpoint                        | Description             |
-|--------|---------------------------------|-------------------------|
-| POST   | `/api/register`                 | Register a new visitor  |
-| **POST** | **`/api/detect_face`**        | **Face & eye detection (NEW!)** |
-| POST   | `/api/checkin`                  | Face ID recognition entry |
-| GET    | `/api/stats`                    | Dashboard statistics    |
-| GET    | `/api/visitors`                 | List all visitors       |
-| GET    | `/api/logs`                     | Visit log history       |
-| GET    | `/api/alerts`                   | Security alerts         |
-| POST   | `/api/alerts/<id>/resolve`      | Resolve an alert        |
-| POST   | `/api/visitors/<uuid>/status`   | Update visitor status   |
+## 🔐 Security Features
+
+### Anti-Spoofing Protection
+- **Blink Detection**: Requires natural blinking
+- **Eye Verification**: Both eyes must be visible
+- **Liveness Check**: Prevents photo/video attacks
+- **Person Presence**: Blocks rapid successive attempts
+
+### Access Control
+- **Visitor Status**: Active, Blocked, Blacklisted
+- **Confidence Scoring**: AI confidence levels
+- **Audit Trail**: Complete access logging
+- **Security Alerts**: Unrecognized face notifications
 
 ---
 
-## Security Features
-- 🛡️ **Anti-Spoofing**: Blink detection prevents photo attacks
-- 👁️ **Liveness Detection**: Ensures real person, not video/image
-- 🔒 **Eye Verification**: Both eyes must be visible and open
-- 📊 **Confidence Scoring**: AI confidence levels for each match
-- 🚨 **Alert System**: Automatic alerts for suspicious activity
-- 📝 **Audit Trail**: Complete logging of all access attempts
+## 🚨 Troubleshooting
+
+### Camera Not Working
+1. **Check browser permissions** - Allow camera access
+2. **Try different browser** - Chrome/Firefox recommended
+3. **Check camera drivers** - Ensure webcam is functional
+4. **Restart application** - `Ctrl+C` then `python app.py`
+
+### DeepFace Installation Issues
+```bash
+# If TensorFlow fails to install:
+pip install --upgrade pip
+pip install tensorflow==2.13.0
+pip install deepface
+
+# For M1 Macs:
+pip install tensorflow-macos
+pip install tensorflow-metal
+```
+
+### Network Access Issues
+1. **Check firewall settings**
+2. **Verify IP address** - Use `ipconfig`/`ifconfig`
+3. **Test local access first** - http://localhost:5000
+4. **Check port availability** - Port 5000 should be free
+
+### Database Issues
+```bash
+# Reset database (WARNING: Deletes all data)
+rm database/visitors.db
+python app.py  # Will recreate database
+```
 
 ---
 
-## Group Members
-*(Fill in your group names here)*
+## 📱 Mobile Device Access
+
+The system is responsive and works on mobile devices:
+- **Tablets**: Full functionality with touch interface
+- **Smartphones**: Optimized for mobile cameras
+- **iOS/Android**: Compatible with mobile browsers
 
 ---
 
-## Technologies Used
+## 🔄 Updates and Maintenance
+
+### Updating the System
+```bash
+# Pull latest changes
+git pull origin main
+
+# Update dependencies
+pip install -r requirements.txt --upgrade
+
+# Restart application
+python app.py
+```
+
+### Backup Important Data
+```bash
+# Backup database
+cp database/visitors.db database/visitors_backup.db
+
+# Backup visitor photos
+cp -r visitor_faces visitor_faces_backup
+```
+
+---
+
+## 🏢 Avida Residence New Manila Branding
+
+This system is specifically customized for:
+- **Avida Residence New Manila VisitorsHub**
+- Professional condominium lobby interface
+- Silent operation (no voice announcements)
+- Corporate red accent color scheme (#e53e3e)
+- Residential-focused visitor management
+
+---
+
+## � Support
+
+For technical support or questions:
+1. Check the troubleshooting section above
+2. Review console logs for error messages
+3. Ensure all dependencies are properly installed
+4. Verify camera and network permissions
+
+---
+
+## 🛠️ Technologies Used
 - **Flask** — Python web framework
-- **DeepFace** — Facebook AI face recognition library
-- **OpenCV** — Face/eye detection and image processing
+- **DeepFace** — Facebook AI face recognition
+- **OpenCV** — Computer vision and face detection
 - **SQLite** — Lightweight database
-- **Vanilla JS** — WebRTC webcam capture, real-time face detection
-- **CSS3** — Modern UI with Face ID animations
+- **JavaScript** — WebRTC camera access and UI
+- **CSS3** — Modern responsive design
+
+---
+
+## 📄 License
+This project is developed for Avida Residence New Manila visitor management purposes.

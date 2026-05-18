@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block head %}
+<style>
+.hero{min-height:100vh;display:flex;align-items:center;justify-content:space-between;
+      padding:0 3rem;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:rgba(15,20,25,0.4);z-index:1}
+
+.hero-content{flex:1;max-width:600px;z-index:2;position:relative}
+.hero-eyebrow{font-family:var(--mono);font-size:.85rem;letter-spacing:.2em;color:var(--muted);
+              text-transform:uppercase;margin-bottom:1rem;font-weight:500}
+.hero-title{font-family:var(--display);font-size:clamp(3rem,8vw,5.5rem);font-weight:800;
+            line-height:1.1;letter-spacing:-.02em;margin-bottom:1rem}
+.hero-title .brand{color:var(--text)}
+.hero-title .location{color:var(--accent);display:block;margin-top:0.5rem}
+.hero-subtitle{color:var(--muted);font-size:1.1rem;line-height:1.6;margin-bottom:2rem;max-width:500px}
+
+.hero-features{display:flex;gap:2rem;margin-bottom:2.5rem;flex-wrap:wrap}
+.hero-feature{display:flex;align-items:center;gap:0.5rem;color:var(--muted);font-size:0.9rem}
+.hero-feature::before{content:'✓';color:var(--accent);font-weight:bold;margin-right:0.25rem}
+
+.hero-actions{display:flex;gap:1.5rem;flex-wrap:wrap}
+
+.hero-image{flex:1;max-width:500px;z-index:2;position:relative;margin-left:2rem}
+.building-showcase{width:100%;height:auto;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+
+.features-section{padding:5rem 3rem;background:rgba(15,20,25,0.95);backdrop-filter:blur(20px)}
+.features-header{text-align:center;margin-bottom:4rem}
+.features-header h2{font-family:var(--display);font-size:2.5rem;font-weight:700;margin-bottom:1rem}
+.features-header p{color:var(--muted);font-size:1.1rem;max-width:600px;margin:0 auto}
+
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+               gap:2rem;max-width:1400px;margin:0 auto}
+.feature-card{background:var(--card);border:1px solid rgba(255,255,255,0.1);border-radius:16px;
+              padding:2rem;transition:all .3s;backdrop-filter:blur(10px);position:relative;overflow:hidden}
+.feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+                      background:var(--accent);transform:scaleX(0);transition:transform .3s;transform-origin:left}
+.feature-card:hover{transform:translateY(-8px);border-color:rgba(229,62,62,0.3)}
+.feature-card:hover::before{transform:scaleX(1)}
+.feature-icon{font-size:2.5rem;margin-bottom:1.5rem;display:block}
+.feature-card h3{font-family:var(--display);font-size:1.2rem;font-weight:700;margin-bottom:1rem;color:var(--text)}
+.feature-card p{color:var(--muted);font-size:.95rem;line-height:1.6}
+
+.footer{padding:3rem;text-align:center;background:rgba(15,20,25,0.98);border-top:1px solid rgba(255,255,255,0.1)}
+.footer p{color:var(--muted);font-size:0.9rem}
+
+@media(max-width:768px){
+  .hero{flex-direction:column;text-align:center;padding:2rem 1.5rem}
+  .hero-image{margin-left:0;margin-top:2rem;max-width:400px}
+  .features-section{padding:3rem 1.5rem}
+  .features-grid{grid-template-columns:1fr}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-eyebrow">Condominium Security System</div>
+    <h1 class="hero-title">
+      <span class="brand">Avida Residence</span>
+      <span class="location">New Manila VisitorsHub</span>
+    </h1>
+    <p class="hero-subtitle">Advanced visitor management system with Face ID technology for secure and seamless access control at Avida Residence New Manila.</p>
+    
+    <div class="hero-features">
+      <div class="hero-feature">Auto-Detection</div>
+      <div class="hero-feature">Blink Verification</div>
+      <div class="hero-feature">Instant Recognition</div>
+    </div>
+    
+    <div class="hero-actions">
+      <a href="/register" class="btn btn-primary">📝 Register Visitor</a>
+      <a href="/checkin" class="btn btn-outline">🔐 Face ID Check-In</a>
+    </div>
+  </div>
+  
+
+</section>
+
+<section class="features-section">
+  <div class="features-header">
+    <h2>Security & Management Features</h2>
+    <p>Comprehensive visitor management system designed specifically for Avida Residence New Manila residents and their guests.</p>
+  </div>
+  
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🏢</div>
+      <h3>Condominium Security</h3>
+      <p>Dedicated visitor management for Avida Residence New Manila residents and their guests with comprehensive access control and security monitoring.</p>
+    </div>
+    
+    <div class="feature-card">
+      <div class="feature-icon">👥</div>
+      <h3>Visitor Registration</h3>
+      <p>Quick and easy visitor registration with photo capture, contact details, and purpose of visit for complete security records and audit trails.</p>
+    </div>
+    
+    <div class="feature-card">
+      <div class="feature-icon">🔐</div>
+      <h3>Face ID Technology</h3>
+      <p>iPhone-like automatic face detection with blink verification for anti-spoofing security and contactless access control system.</p>
+    </div>
+    
+    <div class="feature-card">
+      <div class="feature-icon">👁️</div>
+      <h3>AI Recognition</h3>
+      <p>Advanced facial recognition matches visitors against registered profiles with confidence scoring for accurate identification and security.</p>
+    </div>
+    
+    <div class="feature-card">
+      <div class="feature-icon">🛡️</div>
+      <h3>Liveness Detection</h3>
+      <p>Anti-spoofing protection with eye detection and blink verification to prevent unauthorized access attempts and photo-based attacks.</p>
+    </div>
+    
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <h3>Management Dashboard</h3>
+      <p>Comprehensive admin panel with visitor statistics, access logs, and security alert management for building management staff.</p>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <p>&copy; 2024 Avida Residence New Manila VisitorsHub. All rights reserved.</p>
+</footer>
+{% endblock %}

@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Avida Residence New Manila VisitorsHub — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0f1419;--surface:#1a1f2e;--border:#2a3441;--accent:#e53e3e;--accent2:#ff6b6b;
+      --danger:#ff3b5c;--warn:#ffb700;--text:#ffffff;--muted:#a0aec0;--card:rgba(26, 31, 46, 0.8);
+      --display:'Syne',sans-serif;--sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);display:flex;min-height:100vh;
+     background-image:url('/static/img/bg.png');background-size:cover;background-position:center;background-attachment:fixed}
+
+/* SIDEBAR */
+.sidebar{width:220px;background:rgba(26, 31, 46, 0.95);border-right:1px solid var(--border);
+          display:flex;flex-direction:column;padding:1.5rem 1rem;flex-shrink:0;position:sticky;top:0;height:100vh;
+          transition:width 0.3s ease, padding 0.3s ease;overflow:hidden;backdrop-filter:blur(20px)}
+.sidebar.collapsed{width:70px;padding:1.5rem 0.5rem}
+.sidebar.collapsed .s-text{opacity:0;width:0;overflow:hidden;white-space:nowrap}
+.sidebar.collapsed .s-logo span{opacity:0;width:0}
+.sidebar.collapsed .s-badge{opacity:0;width:0}
+
+.s-logo{font-family:var(--display);font-size:1.1rem;font-weight:800;color:var(--accent);
+        display:flex;align-items:center;gap:.5rem;padding:.5rem .5rem 1.5rem;border-bottom:1px solid var(--border);
+        position:relative}
+.s-logo span{color:var(--text);transition:opacity 0.3s ease, width 0.3s ease}
+
+.s-toggle{position:absolute;top:0.5rem;right:-15px;width:30px;height:30px;
+          background:var(--card);border:1px solid var(--border);border-radius:50%;
+          display:flex;align-items:center;justify-content:center;cursor:pointer;
+          font-size:0.8rem;color:var(--muted);transition:all 0.2s;z-index:10}
+.s-toggle:hover{background:var(--accent);color:#000;transform:scale(1.1)}
+
+.s-nav{display:flex;flex-direction:column;gap:.25rem;margin-top:1.25rem;flex:1}
+.s-link{display:flex;align-items:center;gap:.65rem;padding:.6rem .75rem;border-radius:8px;
+        color:var(--muted);text-decoration:none;font-size:.875rem;font-weight:500;transition:all .2s;cursor:pointer;border:none;background:none;width:100%;text-align:left;
+        position:relative;overflow:hidden}
+.s-link:hover{background:rgba(255,255,255,.04);color:var(--text)}
+.s-link.active{background:rgba(0,229,160,.1);color:var(--accent)}
+.s-icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0}
+.s-text{transition:opacity 0.3s ease, width 0.3s ease;white-space:nowrap}
+
+.s-bottom{border-top:1px solid var(--border);padding-top:1rem;margin-top:auto}
+.s-badge{background:var(--danger);color:#fff;font-size:.65rem;padding:.1rem .4rem;
+          border-radius:10px;font-family:var(--mono);margin-left:auto;
+          transition:opacity 0.3s ease, width 0.3s ease}
+
+/* Tooltip for collapsed state */
+.sidebar.collapsed .s-link{position:relative}
+.sidebar.collapsed .s-link:hover::after{
+  content:attr(data-tooltip);
+  position:absolute;
+  left:60px;
+  top:50%;
+  transform:translateY(-50%);
+  background:var(--card);
+  border:1px solid var(--border);
+  padding:0.5rem 0.75rem;
+  border-radius:8px;
+  font-size:0.8rem;
+  white-space:nowrap;
+  z-index:1000;
+  box-shadow:0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* LOGOUT CONFIRMATION MODAL */
+.logout-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);
+              display:none;align-items:center;justify-content:center;z-index:9999;
+              backdrop-filter:blur(4px);animation:fadeIn 0.3s ease}
+.logout-modal.show{display:flex}
+.logout-modal-content{background:var(--card);border:1px solid var(--border);border-radius:16px;
+                      width:min(400px,90vw);padding:2rem;text-align:center;
+                      box-shadow:0 25px 50px rgba(0,0,0,0.8);position:relative}
+.logout-modal-icon{font-size:3rem;margin-bottom:1rem;color:var(--warn)}
+.logout-modal-title{font-family:var(--display);font-size:1.25rem;font-weight:700;
+                    margin-bottom:0.5rem;color:var(--text)}
+.logout-modal-text{color:var(--muted);font-size:0.9rem;line-height:1.5;margin-bottom:2rem}
+.logout-modal-actions{display:flex;gap:1rem;justify-content:center}
+.logout-btn{padding:0.75rem 1.5rem;border-radius:10px;font-weight:600;cursor:pointer;
+            font-size:0.9rem;transition:all 0.2s;border:none;text-decoration:none;
+            display:inline-flex;align-items:center;gap:0.5rem}
+.logout-btn-cancel{background:rgba(255,255,255,0.1);color:var(--text);border:1px solid var(--border)}
+.logout-btn-cancel:hover{background:rgba(255,255,255,0.2);transform:translateY(-1px)}
+.logout-btn-confirm{background:var(--danger);color:white}
+.logout-btn-confirm:hover{background:#ff1744;transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,59,92,0.4)}
+
+/* MAIN */
+.main{flex:1;overflow:auto;padding:2rem;background:rgba(15,20,25,0.95);backdrop-filter:blur(20px)}
+.section{display:none}
+.section.active{display:block}
+.section-title{font-family:var(--display);font-size:1.5rem;font-weight:800;letter-spacing:-.02em;
+               margin-bottom:.25rem}
+.section-sub{color:var(--muted);font-size:.875rem;margin-bottom:2rem}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;margin-bottom:2rem}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.25rem;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.stat-card.c1::before{background:var(--accent)}
+.stat-card.c2::before{background:var(--accent2)}
+.stat-card.c3::before{background:var(--warn)}
+.stat-card.c4::before{background:var(--danger)}
+.stat-value{font-family:var(--display);font-size:2.25rem;font-weight:800;line-height:1}
+.stat-label{color:var(--muted);font-size:.75rem;font-family:var(--mono);margin-top:.4rem;letter-spacing:.05em}
+
+/* TABLE */
+.tbl-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:auto}
+.tbl-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;
+             border-bottom:1px solid var(--border)}
+.tbl-title{font-family:var(--display);font-size:.95rem;font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+th{padding:.65rem 1rem;color:var(--muted);font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;
+   text-align:left;border-bottom:1px solid var(--border);font-weight:500}
+td{padding:.65rem 1rem;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+.mono{font-family:var(--mono);font-size:.75rem}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .6rem;border-radius:20px;
+       font-size:.68rem;font-family:var(--mono);font-weight:500}
+.bg{background:rgba(0,229,160,.1);color:var(--accent);border:1px solid rgba(0,229,160,.2)}
+.br{background:rgba(255,59,92,.1);color:var(--danger);border:1px solid rgba(255,59,92,.2)}
+.by{background:rgba(255,183,0,.1);color:var(--warn);border:1px solid rgba(255,183,0,.2)}
+.bb{background:rgba(0,119,255,.1);color:var(--accent2);border:1px solid rgba(0,119,255,.2)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .85rem;border-radius:7px;
+     font-size:.78rem;font-weight:500;cursor:pointer;border:none;font-family:var(--sans);transition:all .18s;text-decoration:none}
+.btn-p{background:var(--accent);color:#000}.btn-p:hover{background:#00ffb3}
+.btn-d{background:rgba(255,59,92,.15);color:var(--danger);border:1px solid rgba(255,59,92,.2)}
+.btn-d:hover{background:var(--danger);color:#fff}
+.btn-s{background:rgba(0,119,255,.15);color:var(--accent2);border:1px solid rgba(0,119,255,.2)}
+
+/* ALERT PANEL */
+.alert-item{background:var(--card);border:1px solid rgba(255,59,92,.2);border-radius:10px;
+             padding:1rem 1.25rem;margin-bottom:.75rem;display:flex;align-items:center;gap:1rem}
+.alert-icon{font-size:1.5rem;flex-shrink:0}
+.alert-msg{flex:1;font-size:.875rem}
+.alert-time{font-family:var(--mono);font-size:.7rem;color:var(--muted)}
+
+/* SEARCH */
+.search-bar{display:flex;gap:.75rem;margin-bottom:1rem}
+.search-bar input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:8px;
+                   padding:.55rem .9rem;color:var(--text);font-family:var(--sans);font-size:.85rem;outline:none}
+.search-bar input:focus{border-color:var(--accent)}
+
+/* VISITOR DETAIL */
+.visitor-photo{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--border)}
+
+/* MODAL */
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);
+       display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
+.modal.show{display:flex}
+.modal-content{background:var(--card);border:1px solid var(--border);border-radius:16px;
+               width:min(800px,90vw);max-height:90vh;overflow:auto;position:relative}
+.modal-header{padding:1.5rem 2rem;border-bottom:1px solid var(--border);display:flex;
+              align-items:center;justify-content:space-between}
+.modal-title{font-family:var(--display);font-size:1.25rem;font-weight:700}
+.modal-close{background:none;border:none;color:var(--muted);font-size:1.5rem;
+             cursor:pointer;padding:0.5rem;border-radius:8px;transition:all 0.2s}
+.modal-close:hover{background:rgba(255,255,255,0.1);color:var(--text)}
+.modal-body{padding:2rem}
+
+.visitor-profile{display:flex;gap:2rem;margin-bottom:2rem;align-items:flex-start}
+.visitor-avatar{width:120px;height:120px;border-radius:16px;object-fit:cover;
+                border:3px solid var(--border);background:var(--surface)}
+.visitor-info h3{font-family:var(--display);font-size:1.5rem;margin-bottom:0.5rem}
+.visitor-info .detail{margin-bottom:0.75rem}
+.visitor-info .label{color:var(--muted);font-size:0.8rem;font-family:var(--mono);
+                     text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.25rem}
+.visitor-info .value{font-size:0.9rem}
+
+.session-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem}
+.session-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.25rem}
+.session-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.session-date{font-family:var(--mono);font-size:0.85rem;color:var(--muted)}
+.session-duration{font-size:0.8rem;color:var(--accent)}
+.session-actions{display:flex;flex-direction:column;gap:0.5rem}
+.session-action{display:flex;justify-content:space-between;align-items:center;
+                padding:0.5rem;background:rgba(255,255,255,0.02);border-radius:6px}
+.session-time{font-family:var(--mono);font-size:0.75rem;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="s-logo">
+    <img src="/static/img/logo.png" alt="Logo" style="height:24px;width:auto;"/>
+    <div class="s-toggle" onclick="toggleSidebar()" title="Toggle Sidebar">
+      ‹
+    </div>
+  </div>
+  <nav class="s-nav">
+    <button class="s-link active" onclick="showSection('overview')" data-tooltip="Overview">
+      <span class="s-icon">📊</span>
+      <span class="s-text">Overview</span>
+    </button>
+    <button class="s-link" onclick="showSection('visitors')" data-tooltip="Visitors">
+      <span class="s-icon">👥</span>
+      <span class="s-text">Visitors</span>
+    </button>
+    <button class="s-link" onclick="showSection('logs')" data-tooltip="Visit Logs">
+      <span class="s-icon">📋</span>
+      <span class="s-text">Visit Logs</span>
+    </button>
+    <button class="s-link" id="alert-link" onclick="showSection('alerts')" data-tooltip="Alerts">
+      <span class="s-icon">🚨</span>
+      <span class="s-text">Alerts</span>
+      <span class="s-badge" id="alert-count" style="display:none">0</span>
+    </button>
+  </nav>
+  <div class="s-bottom">
+    <button class="s-link" style="color:var(--danger)" data-tooltip="Logout" onclick="showLogoutModal()">
+      <span class="s-icon">→</span>
+      <span class="s-text">Logout</span>
+    </button>
+  </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+
+  <!-- OVERVIEW -->
+  <section id="sec-overview" class="section active">
+    <div class="section-title">Avida Residence New Manila VisitorsHub</div>
+    <div class="section-sub">Visitor Management Dashboard - Real-time activity and system status</div>
+    <div class="stat-grid">
+      <div class="stat-card c1"><div class="stat-value" id="s-total">—</div><div class="stat-label">TOTAL REGISTERED</div></div>
+      <div class="stat-card c2"><div class="stat-value" id="s-today">—</div><div class="stat-label">TODAY'S CHECK-INS</div></div>
+      <div class="stat-card c3"><div class="stat-value" id="s-active">—</div><div class="stat-label">CURRENTLY INSIDE</div></div>
+      <div class="stat-card c4"><div class="stat-value" id="s-alerts">—</div><div class="stat-label">OPEN ALERTS</div></div>
+    </div>
+    <div class="tbl-wrap">
+      <div class="tbl-header"><div class="tbl-title">Recent Activity</div>
+        <button class="btn btn-s" onclick="loadLogs()">↻ Refresh</button></div>
+      <table><thead><tr><th>TIME</th><th>VISITOR</th><th>ACTION</th><th>CONFIDENCE</th></tr></thead>
+      <tbody id="recent-log-body"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">Loading…</td></tr></tbody></table>
+    </div>
+  </section>
+
+  <!-- VISITORS -->
+  <section id="sec-visitors" class="section">
+    <div class="section-title">Registered Visitors</div>
+    <div class="section-sub">Manage visitor profiles and access status</div>
+    <div class="search-bar">
+      <input id="visitor-search" placeholder="🔍 Search by name or email…" oninput="filterVisitors()"/>
+    </div>
+    <div class="tbl-wrap">
+      <table><thead><tr><th></th><th>NAME</th><th>EMAIL</th><th>PURPOSE</th><th>REGISTERED</th><th>STATUS</th><th>VIEW</th><th>ACTION</th></tr></thead>
+      <tbody id="visitor-body"><tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem">Loading…</td></tr></tbody></table>
+    </div>
+  </section>
+
+  <!-- LOGS -->
+  <section id="sec-logs" class="section">
+    <div class="section-title">Visit Logs</div>
+    <div class="section-sub">Full audit trail of all check-ins and check-outs</div>
+    <div class="tbl-wrap">
+      <div class="tbl-header"><div class="tbl-title">All Events</div>
+        <button class="btn btn-s" onclick="loadLogs()">↻ Refresh</button></div>
+      <table><thead><tr><th>#</th><th>TIME</th><th>VISITOR</th><th>ACTION</th><th>CONFIDENCE</th><th>NOTES</th></tr></thead>
+      <tbody id="log-body"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">Loading…</td></tr></tbody></table>
+    </div>
+  </section>
+
+  <!-- ALERTS -->
+  <section id="sec-alerts" class="section">
+    <div class="section-title">Security Alerts</div>
+    <div class="section-sub">Unresolved security events requiring attention</div>
+    
+    <!-- Test button for debugging -->
+
+    <div id="alert-list"><p style="color:var(--muted)">Loading alerts…</p></div>
+  </section>
+
+</main>
+
+<!-- Visitor Detail Modal -->
+<div id="visitor-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">Visitor Details</div>
+      <button class="modal-close" onclick="closeVisitorModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="visitor-profile">
+        <img id="modal-avatar" class="visitor-avatar" src="" alt="Visitor Photo"/>
+        <div class="visitor-info">
+          <h3 id="modal-name">Loading...</h3>
+          <div class="detail">
+            <div class="label">Email</div>
+            <div class="value" id="modal-email">—</div>
+          </div>
+          <div class="detail">
+            <div class="label">Company</div>
+            <div class="value" id="modal-company">—</div>
+          </div>
+          <div class="detail">
+            <div class="label">Purpose</div>
+            <div class="value" id="modal-purpose">—</div>
+          </div>
+          <div class="detail">
+            <div class="label">Registered</div>
+            <div class="value" id="modal-registered">—</div>
+          </div>
+          <div class="detail">
+            <div class="label">Status</div>
+            <div class="value" id="modal-status">—</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="section-title" style="margin-bottom:1rem">Visit Sessions</div>
+      <div id="modal-sessions">
+        <p style="color:var(--muted);text-align:center;padding:2rem">Loading sessions...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Unverified Face Modal -->
+<div id="unverified-modal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div class="modal-title">🚨 Unverified Access Attempt</div>
+      <button class="modal-close" onclick="closeUnverifiedModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="visitor-profile">
+        <img id="unverified-photo" class="visitor-avatar" src="" alt="Unverified Face"/>
+        <div class="visitor-info">
+          <h3 style="color:var(--danger)">Unknown Person</h3>
+          <div class="detail">
+            <div class="label">Attempt Time</div>
+            <div class="value" id="unverified-time">—</div>
+          </div>
+          <div class="detail">
+            <div class="label">Status</div>
+            <div class="value"><span class="badge br">Access Denied</span></div>
+          </div>
+          <div class="detail">
+            <div class="label">Action Required</div>
+            <div class="value" style="color:var(--warn)">Review and identify this person</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="section-title" style="margin-bottom:1rem">Security Actions</div>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap">
+        <button class="btn btn-p" onclick="registerUnverifiedPerson()">👤 Register as New Visitor</button>
+        <button class="btn btn-d" onclick="addToBlacklist()">🚫 Add to Security Blacklist</button>
+        <button class="btn btn-s" onclick="downloadPhoto()">💾 Download Photo</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Logout Confirmation Modal -->
+<div id="logout-modal" class="logout-modal">
+  <div class="logout-modal-content">
+    <div class="logout-modal-icon">⚠️</div>
+    <div class="logout-modal-title">Confirm Logout</div>
+    <div class="logout-modal-text">
+      Are you sure you want to logout from the admin panel?<br>
+      You will need to enter your credentials again to access the dashboard.
+    </div>
+    <div class="logout-modal-actions">
+      <button class="logout-btn logout-btn-cancel" onclick="hideLogoutModal()">
+        ✕ Cancel
+      </button>
+      <a href="/admin/logout" class="logout-btn logout-btn-confirm">
+        → Logout
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+let allVisitors = [];
+
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.s-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('sec-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (name === 'visitors') loadVisitors();
+  if (name === 'logs')     loadLogs();
+  if (name === 'alerts')   loadAlerts();
+}
+
+function fmt(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+}
+
+function actionBadge(action) {
+  const map = {check_in:'bg',check_out:'br',denied:'br',registered:'bb'};
+  const cls = map[action] || 'by';
+  return `<span class="badge ${cls}">${action.replace('_',' ')}</span>`;
+}
+
+async function loadStats() {
+  const r = await fetch('/api/stats');
+  const d = await r.json();
+  document.getElementById('s-total').textContent  = d.total_visitors;
+  document.getElementById('s-today').textContent  = d.today_checkins;
+  document.getElementById('s-active').textContent = d.active_visitors;
+  document.getElementById('s-alerts').textContent = d.unresolved_alerts;
+  const cnt = document.getElementById('alert-count');
+  if (d.unresolved_alerts > 0) { cnt.style.display = ''; cnt.textContent = d.unresolved_alerts; }
+  else { cnt.style.display = 'none'; }
+}
+
+async function loadLogs() {
+  const r = await fetch('/api/logs?limit=100');
+  const rows = await r.json();
+  const tbody = document.getElementById('log-body');
+  const rBody = document.getElementById('recent-log-body');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">No logs yet.</td></tr>';
+    rBody.innerHTML = tbody.innerHTML;
+    return;
+  }
+  tbody.innerHTML = rows.map((l,i) => `<tr>
+    <td class="mono">${l.id}</td>
+    <td class="mono">${fmt(l.timestamp)}</td>
+    <td>${l.visitor_name || '<span style="color:var(--muted)">Unknown</span>'}</td>
+    <td>${actionBadge(l.action)}</td>
+    <td class="mono">${l.confidence ? l.confidence.toFixed(1)+'%' : '—'}</td>
+    <td style="color:var(--muted);font-size:.75rem">${l.notes || ''}</td>
+  </tr>`).join('');
+  rBody.innerHTML = rows.slice(0,10).map(l => `<tr>
+    <td class="mono">${fmt(l.timestamp)}</td>
+    <td>${l.visitor_name || '<span style="color:var(--muted)">Unknown</span>'}</td>
+    <td>${actionBadge(l.action)}</td>
+    <td class="mono">${l.confidence ? l.confidence.toFixed(1)+'%' : '—'}</td>
+  </tr>`).join('');
+}
+
+async function loadVisitors() {
+  const r = await fetch('/api/visitors');
+  allVisitors = await r.json();
+  renderVisitors(allVisitors);
+}
+
+function renderVisitors(visitors) {
+  const tbody = document.getElementById('visitor-body');
+  if (!visitors.length) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:2rem">No visitors registered yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = visitors.map(v => `<tr>
+    <td>${v.photo_path ? `<img src="/visitor_faces/${v.photo_path.split(/[/\\]/).pop()}" class="visitor-photo" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2248%22 height=%2248%22><rect width=%2248%22 height=%2248%22 rx=%2224%22 fill=%22%23222%22/><text y=%2232%22 x=%2212%22 font-size=%2224%22>👤</text></svg>'"/>` : '<span style="font-size:1.5rem">👤</span>'}</td>
+    <td><strong>${v.name}</strong><br><span class="mono" style="font-size:.7rem;color:var(--muted)">${v.company||''}</span></td>
+    <td class="mono" style="font-size:.75rem">${v.email||'—'}</td>
+    <td>${v.purpose||'—'}</td>
+    <td class="mono" style="font-size:.72rem">${fmt(v.registered_at)}</td>
+    <td>${v.status==='active' ? '<span class="badge bg">active</span>' : '<span class="badge br">'+v.status+'</span>'}</td>
+    <td><button class="btn btn-s" onclick="viewVisitor('${v.uuid}')">👁️ View</button></td>
+    <td>
+      ${v.status==='active'
+        ? `<button class="btn btn-d" onclick="setStatus('${v.uuid}','blacklisted')">🚫 Blacklist</button>`
+        : `<button class="btn btn-s" onclick="setStatus('${v.uuid}','active')">✅ Restore</button>`
+      }
+    </td>
+  </tr>`).join('');
+}
+
+function filterVisitors() {
+  const q = document.getElementById('visitor-search').value.toLowerCase();
+  renderVisitors(allVisitors.filter(v => v.name.toLowerCase().includes(q) || (v.email||'').toLowerCase().includes(q)));
+}
+
+async function setStatus(uuid, status) {
+  await fetch(`/api/visitors/${uuid}/status`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({status})});
+  loadVisitors();
+}
+
+async function loadAlerts() {
+  const r = await fetch('/api/alerts');
+  const alerts = await r.json();
+  const list = document.getElementById('alert-list');
+  if (!alerts.length) {
+    list.innerHTML = '<p style="color:var(--muted);padding:2rem;text-align:center">No open alerts.</p>';
+    return;
+  }
+  list.innerHTML = alerts.map(a => `<div class="alert-item">
+    <div class="alert-icon">🚨</div>
+    <div class="alert-msg">
+      <strong>${a.type.replace('_',' ')}</strong>
+      <div style="color:var(--muted);font-size:.82rem;margin-top:.2rem">${a.message}</div>
+      <div class="alert-time">${fmt(a.timestamp)}</div>
+    </div>
+    <div style="display:flex;gap:0.5rem;align-items:center">
+      ${a.photo_path ? `<button class="btn btn-s" onclick="showUnverifiedPhoto(${a.id}, '${a.photo_path.replace(/\\/g, '/')}')">👁️ View</button>` : ''}
+      <button class="btn btn-p" onclick="resolveAlert(${a.id},this)">Resolve</button>
+    </div>
+  </div>`).join('');
+}
+
+async function resolveAlert(id, btn) {
+  btn.disabled = true; btn.textContent = '…';
+  await fetch(`/api/alerts/${id}/resolve`, {method:'POST'});
+  btn.closest('.alert-item').remove();
+  loadStats();
+}
+
+// Visitor Detail Modal Functions
+async function viewVisitor(uuid) {
+  const modal = document.getElementById('visitor-modal');
+  modal.classList.add('show');
+  
+  // Find visitor data
+  const visitor = allVisitors.find(v => v.uuid === uuid);
+  if (!visitor) return;
+  
+  // Populate visitor info
+  document.getElementById('modal-name').textContent = visitor.name;
+  document.getElementById('modal-email').textContent = visitor.email || '—';
+  document.getElementById('modal-company').textContent = visitor.company || '—';
+  document.getElementById('modal-purpose').textContent = visitor.purpose || '—';
+  document.getElementById('modal-registered').textContent = fmt(visitor.registered_at);
+  document.getElementById('modal-status').innerHTML = visitor.status === 'active' 
+    ? '<span class="badge bg">active</span>' 
+    : '<span class="badge br">' + visitor.status + '</span>';
+  
+  // Set visitor photo
+  const avatar = document.getElementById('modal-avatar');
+  if (visitor.photo_path) {
+    const filename = visitor.photo_path.split(/[/\\]/).pop(); // Handle both / and \ separators
+    avatar.src = '/visitor_faces/' + filename;
+    avatar.onerror = () => avatar.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="120" height="120" rx="16" fill="#222"/><text y="70" x="35" font-size="48">👤</text></svg>';
+  } else {
+    avatar.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="120" height="120" rx="16" fill="#222"/><text y="70" x="35" font-size="48">👤</text></svg>';
+  }
+  
+  // Load visitor sessions
+  await loadVisitorSessions(uuid);
+}
+
+async function loadVisitorSessions(uuid) {
+  const sessionsContainer = document.getElementById('modal-sessions');
+  sessionsContainer.innerHTML = '<p style="color:var(--muted);text-align:center;padding:2rem">Loading sessions...</p>';
+  
+  try {
+    // Get all logs for this visitor
+    const response = await fetch('/api/logs?limit=1000');
+    const allLogs = await response.json();
+    
+    // Filter logs for this visitor
+    const visitorLogs = allLogs.filter(log => log.visitor_uuid === uuid);
+    
+    if (visitorLogs.length === 0) {
+      sessionsContainer.innerHTML = '<p style="color:var(--muted);text-align:center;padding:2rem">No visit sessions found.</p>';
+      return;
+    }
+    
+    // Group logs into sessions (check-in followed by check-out)
+    const sessions = groupLogsIntoSessions(visitorLogs);
+    
+    if (sessions.length === 0) {
+      sessionsContainer.innerHTML = '<p style="color:var(--muted);text-align:center;padding:2rem">No complete sessions found.</p>';
+      return;
+    }
+    
+    // Render sessions
+    sessionsContainer.innerHTML = `
+      <div class="session-grid">
+        ${sessions.map(session => renderSession(session)).join('')}
+      </div>
+    `;
+  } catch (error) {
+    sessionsContainer.innerHTML = '<p style="color:var(--danger);text-align:center;padding:2rem">Error loading sessions.</p>';
+  }
+}
+
+function groupLogsIntoSessions(logs) {
+  // Sort logs by timestamp
+  logs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  
+  const sessions = [];
+  let currentSession = null;
+  
+  for (const log of logs) {
+    if (log.action === 'check_in') {
+      // Start new session
+      currentSession = {
+        checkIn: log,
+        checkOut: null,
+        date: new Date(log.timestamp).toLocaleDateString()
+      };
+    } else if (log.action === 'check_out' && currentSession) {
+      // Complete current session
+      currentSession.checkOut = log;
+      sessions.push(currentSession);
+      currentSession = null;
+    }
+  }
+  
+  // Add incomplete session (checked in but not out)
+  if (currentSession) {
+    sessions.push(currentSession);
+  }
+  
+  return sessions.reverse(); // Most recent first
+}
+
+function renderSession(session) {
+  const checkInTime = new Date(session.checkIn.timestamp);
+  const checkOutTime = session.checkOut ? new Date(session.checkOut.timestamp) : null;
+  
+  let duration = '—';
+  if (checkOutTime) {
+    const diffMs = checkOutTime - checkInTime;
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    duration = `${hours}h ${minutes}m`;
+  } else {
+    duration = 'Still inside';
+  }
+  
+  return `
+    <div class="session-card">
+      <div class="session-header">
+        <div class="session-date">${session.date}</div>
+        <div class="session-duration">${duration}</div>
+      </div>
+      <div class="session-actions">
+        <div class="session-action">
+          <div>
+            ${actionBadge('check_in')}
+            <span class="session-time">${checkInTime.toLocaleTimeString()}</span>
+          </div>
+          <div class="mono" style="font-size:0.75rem;color:var(--muted)">
+            ${session.checkIn.confidence ? session.checkIn.confidence.toFixed(1) + '%' : '—'}
+          </div>
+        </div>
+        ${session.checkOut ? `
+          <div class="session-action">
+            <div>
+              ${actionBadge('check_out')}
+              <span class="session-time">${checkOutTime.toLocaleTimeString()}</span>
+            </div>
+            <div class="mono" style="font-size:0.75rem;color:var(--muted)">
+              ${session.checkOut.confidence ? session.checkOut.confidence.toFixed(1) + '%' : '—'}
+            </div>
+          </div>
+        ` : `
+          <div class="session-action" style="opacity:0.5">
+            <div>
+              <span class="badge" style="background:rgba(255,183,0,.1);color:var(--warn);border:1px solid rgba(255,183,0,.2)">pending checkout</span>
+            </div>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
+}
+
+function closeVisitorModal() {
+  document.getElementById('visitor-modal').classList.remove('show');
+}
+
+// Close modal when clicking outside
+document.getElementById('visitor-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'visitor-modal') {
+    closeVisitorModal();
+  }
+});
+
+// Simple function to show unverified photo
+function showUnverifiedPhoto(alertId, photoPath) {
+  console.log('showUnverifiedPhoto called:', alertId, photoPath);
+  
+  // Create a simple popup window with the photo
+  const filename = photoPath.split(/[/\\]/).pop();
+  const photoUrl = '/unverified_faces/' + filename;
+  
+  console.log('Photo URL:', photoUrl);
+  
+  // Create enhanced modal HTML
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    animation: fadeIn 0.3s ease;
+  `;
+  
+  modal.onclick = () => modal.remove();
+  
+  const content = document.createElement('div');
+  content.style.cssText = `
+    max-width: 600px;
+    max-height: 90vh;
+    text-align: center;
+    position: relative;
+    background: var(--card);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+    border: 1px solid var(--border);
+  `;
+  content.onclick = (e) => e.stopPropagation();
+  
+  // Close button
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '×';
+  closeBtn.style.cssText = `
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: rgba(255,59,92,0.1);
+    border: 1px solid rgba(255,59,92,0.3);
+    color: var(--danger);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  `;
+  closeBtn.onclick = () => modal.remove();
+  closeBtn.onmouseover = () => {
+    closeBtn.style.background = 'var(--danger)';
+    closeBtn.style.color = 'white';
+  };
+  closeBtn.onmouseout = () => {
+    closeBtn.style.background = 'rgba(255,59,92,0.1)';
+    closeBtn.style.color = 'var(--danger)';
+  };
+  
+  // Header
+  const header = document.createElement('div');
+  header.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;gap:0.75rem;margin-bottom:1.5rem">
+      <div style="width:12px;height:12px;background:var(--danger);border-radius:50%;animation:pulse 2s infinite"></div>
+      <h2 style="font-family:var(--display);font-size:1.5rem;font-weight:700;color:var(--danger);margin:0">
+        🚨 Security Alert
+      </h2>
+      <div style="width:12px;height:12px;background:var(--danger);border-radius:50%;animation:pulse 2s infinite"></div>
+    </div>
+  `;
+  
+  // Photo container
+  const photoContainer = document.createElement('div');
+  photoContainer.style.cssText = `
+    position: relative;
+    margin-bottom: 1.5rem;
+  `;
+  
+  const img = document.createElement('img');
+  img.style.cssText = `
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    border: 3px solid var(--danger);
+  `;
+  
+  img.onerror = () => {
+    img.style.display = 'none';
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = `
+      width: 400px;
+      height: 300px;
+      background: #ff3b5c;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 48px;
+    `;
+    errorDiv.innerHTML = `
+      <div style="font-size: 48px;">❌</div>
+      <div style="font-size: 16px; margin-top: 10px;">Photo Not Found</div>
+    `;
+    photoContainer.appendChild(errorDiv);
+  };
+  
+  img.onload = () => console.log('Photo loaded successfully');
+  img.src = photoUrl;
+  
+  // Photo badge
+  const badge = document.createElement('div');
+  badge.innerHTML = 'UNVERIFIED';
+  badge.style.cssText = `
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: var(--danger);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    font-family: var(--mono);
+    box-shadow: 0 4px 12px rgba(255,59,92,0.4);
+  `;
+  
+  photoContainer.appendChild(img);
+  photoContainer.appendChild(badge);
+  
+  // Info panel
+  const infoPanel = document.createElement('div');
+  infoPanel.style.cssText = `
+    background: var(--surface);
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border);
+  `;
+  infoPanel.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;text-align:left">
+      <div>
+        <div style="color:var(--muted);font-size:0.8rem;font-family:var(--mono);
+                    text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.25rem">
+          Alert ID
+        </div>
+        <div style="font-weight:600;color:var(--text)">#${alertId}</div>
+      </div>
+      <div>
+        <div style="color:var(--muted);font-size:0.8rem;font-family:var(--mono);
+                    text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.25rem">
+          Status
+        </div>
+        <div style="color:var(--danger);font-weight:600">ACCESS DENIED</div>
+      </div>
+    </div>
+    
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+      <div style="color:var(--muted);font-size:0.8rem;font-family:var(--mono);
+                  text-transform:uppercase;letter-spacing:0.1em;margin-bottom:0.25rem">
+        Description
+      </div>
+      <div style="color:var(--text)">Unrecognized individual attempted unauthorized facility access</div>
+    </div>
+  `;
+  
+  // Action buttons
+  const actions = document.createElement('div');
+  actions.style.cssText = `
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  `;
+  
+  const downloadBtn = document.createElement('button');
+  downloadBtn.innerHTML = '💾 Download Photo';
+  downloadBtn.style.cssText = `
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+  `;
+  downloadBtn.onclick = () => downloadUnverifiedPhoto(photoUrl, filename);
+  downloadBtn.onmouseover = () => {
+    downloadBtn.style.transform = 'translateY(-2px)';
+    downloadBtn.style.boxShadow = '0 8px 20px rgba(0,119,255,0.3)';
+  };
+  downloadBtn.onmouseout = () => {
+    downloadBtn.style.transform = 'translateY(0)';
+    downloadBtn.style.boxShadow = 'none';
+  };
+  
+  const registerBtn = document.createElement('button');
+  registerBtn.innerHTML = '👤 Register Person';
+  registerBtn.style.cssText = `
+    background: rgba(255,183,0,0.15);
+    color: var(--warn);
+    border: 1px solid rgba(255,183,0,0.3);
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+  `;
+  registerBtn.onclick = () => alert('Feature coming soon: Register as new visitor');
+  
+  actions.appendChild(downloadBtn);
+  actions.appendChild(registerBtn);
+  
+  // Close instruction
+  const instruction = document.createElement('div');
+  instruction.innerHTML = 'Click outside this window or the × button to close';
+  instruction.style.cssText = `
+    margin-top: 1.5rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+  `;
+  
+  // Assemble modal
+  content.appendChild(closeBtn);
+  content.appendChild(header);
+  content.appendChild(photoContainer);
+  content.appendChild(infoPanel);
+  content.appendChild(actions);
+  content.appendChild(instruction);
+  
+  modal.appendChild(content);
+  
+  // Add CSS animations
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+  `;
+  document.head.appendChild(style);
+  
+  // Add to page
+  document.body.appendChild(modal);
+}
+
+// Download function for unverified photos
+function downloadUnverifiedPhoto(photoUrl, filename) {
+  const link = document.createElement('a');
+  link.href = photoUrl;
+  link.download = `security_alert_${new Date().toISOString().slice(0,10)}_${filename}`;
+  link.click();
+}
+
+// Test function for debugging
+function testUnverifiedModal() {
+  console.log('Testing unverified modal...');
+  showUnverifiedPhoto(9, 'visitor_faces/unverified_20260511_004719_e2e6c7c7.jpg');
+}
+
+// Init
+loadStats();
+loadLogs();
+setInterval(loadStats, 15000);
+
+// Sidebar toggle functionality
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.querySelector('.s-toggle');
+  
+  sidebar.classList.toggle('collapsed');
+  
+  // Update toggle icon
+  if (sidebar.classList.contains('collapsed')) {
+    toggle.innerHTML = '›';
+    toggle.title = 'Expand Sidebar';
+  } else {
+    toggle.innerHTML = '‹';
+    toggle.title = 'Collapse Sidebar';
+  }
+}
+
+// Keyboard shortcut for sidebar toggle (Ctrl+B like VS Code)
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key === 'b') {
+    e.preventDefault();
+    toggleSidebar();
+  }
+});
+
+// Logout confirmation modal functions
+function showLogoutModal() {
+  const modal = document.getElementById('logout-modal');
+  modal.classList.add('show');
+  
+  // Focus on cancel button for accessibility
+  setTimeout(() => {
+    document.querySelector('.logout-btn-cancel').focus();
+  }, 100);
+}
+
+function hideLogoutModal() {
+  const modal = document.getElementById('logout-modal');
+  modal.classList.remove('show');
+}
+
+// Close logout modal when clicking outside
+document.getElementById('logout-modal').addEventListener('click', (e) => {
+  if (e.target.id === 'logout-modal') {
+    hideLogoutModal();
+  }
+});
+
+// Keyboard shortcuts for logout modal
+document.addEventListener('keydown', (e) => {
+  const logoutModal = document.getElementById('logout-modal');
+  
+  if (logoutModal.classList.contains('show')) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      hideLogoutModal();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      // Confirm logout on Enter
+      window.location.href = '/admin/logout';
+    }
+  }
+});
+</script>
+</body>
+</html>

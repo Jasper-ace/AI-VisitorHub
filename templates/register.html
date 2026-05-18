@@ -1,0 +1,413 @@
+{% extends "base.html" %}
+{% block title %}Register Visitor{% endblock %}
+
+{% block head %}
+<style>
+.page{max-width:1000px;margin:0 auto;padding:3rem 2rem;min-height:100vh;
+      background:rgba(15,20,25,0.95);backdrop-filter:blur(20px)}
+.page-header{margin-bottom:3rem;text-align:center}
+.page-header h1{font-family:var(--display);font-size:2.5rem;font-weight:800;letter-spacing:-.02em;margin-bottom:1rem}
+.page-header p{color:var(--muted);margin-top:.5rem;font-size:1rem;max-width:600px;margin-left:auto;margin-right:auto}
+
+.reg-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start}
+@media(max-width:768px){.reg-grid{grid-template-columns:1fr;gap:2rem}}
+
+/* Camera panel */
+.cam-panel{background:var(--card);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:2rem;
+           backdrop-filter:blur(10px)}
+.cam-panel h2{font-family:var(--display);font-size:1.2rem;font-weight:700;margin-bottom:1.5rem;
+              display:flex;align-items:center;gap:.75rem;color:var(--text)}
+.cam-wrap{position:relative;border-radius:12px;overflow:hidden;background:#000;aspect-ratio:4/3;
+          border:2px solid rgba(255,255,255,0.1)}
+#cam-video,#cam-preview{width:100%;height:100%;object-fit:cover;display:block}
+#cam-preview{display:none;position:absolute;inset:0}
+.cam-overlay{position:absolute;inset:0;border:2px solid var(--accent);border-radius:12px;
+             pointer-events:none;opacity:.6}
+.cam-scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);
+               animation:scan 2.5s ease-in-out infinite;opacity:.8}
+@keyframes scan{0%{top:0;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:100%;opacity:0}}
+.cam-actions{display:flex;gap:1rem;margin-top:1.5rem}
+.cam-status{font-family:var(--mono);font-size:.8rem;color:var(--muted);margin-top:1rem;text-align:center;
+            padding:0.75rem;background:rgba(255,255,255,0.05);border-radius:8px}
+#cam-status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;
+                background:var(--muted);margin-right:.5rem;vertical-align:middle}
+#cam-status-dot.live{background:var(--accent);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Form */
+.form-panel{background:var(--card);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:2rem;
+            backdrop-filter:blur(10px)}
+.form-panel h2{font-family:var(--display);font-size:1.2rem;font-weight:700;margin-bottom:1.5rem;color:var(--text)}
+.form-group{margin-bottom:1.25rem}
+.form-group label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:.6rem;
+                  font-family:var(--mono);letter-spacing:.05em;font-weight:500}
+.form-group input,.form-group select,.form-group textarea{
+  width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;
+  padding:.8rem 1rem;color:var(--text);font-family:var(--sans);font-size:.9rem;
+  transition:all .3s;outline:none}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+  border-color:var(--accent);background:rgba(255,255,255,0.08);box-shadow:0 0 0 3px rgba(229,62,62,0.1)}
+.form-group select option{background:var(--surface);color:var(--text)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:600px){.form-row{grid-template-columns:1fr}}
+
+/* Result */
+.result-box{display:none;margin-top:1.5rem;padding:1rem 1.5rem;border-radius:12px;font-size:.9rem;
+           backdrop-filter:blur(10px);animation:slideIn 0.3s ease}
+.result-box.success{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#22c55e}
+.result-box.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#ef4444}
+.result-box.warning{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#f59e0b}
+
+@keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+
+.btn{padding:.8rem 1.5rem;border-radius:10px;font-weight:600;font-size:.9rem;transition:all .3s}
+.btn-primary{background:var(--accent);color:#fff;border:none}
+.btn-primary:hover{background:var(--accent2);transform:translateY(-2px);box-shadow:var(--glow)}
+.btn-outline{background:transparent;color:var(--text);border:2px solid rgba(255,255,255,0.2)}
+.btn-outline:hover{border-color:var(--accent);color:var(--accent);background:rgba(229,62,62,0.1)}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <h1>Register Visitor</h1>
+    <p>Register visitors for Avida Residence New Manila VisitorsHub. Capture photo and complete visitor information for secure access.</p>
+  </div>
+
+  <div class="reg-grid">
+    <!-- Camera -->
+    <div class="cam-panel">
+      <h2>📷 Face Capture</h2>
+      <div class="cam-wrap">
+        <video id="cam-video" autoplay playsinline muted></video>
+        <img id="cam-preview" alt="Captured face"/>
+        <div class="cam-overlay"></div>
+        <div class="cam-scan-line" id="scan-line"></div>
+      </div>
+      <div class="cam-status">
+        <span id="cam-status-dot"></span>
+        <span id="cam-status-text">Initializing camera…</span>
+      </div>
+      <div class="cam-actions">
+        <button class="btn btn-primary" id="btn-capture" style="flex:1" disabled>📸 Capture</button>
+        <button class="btn btn-outline" id="btn-retake" style="display:none;flex:1">↩ Retake</button>
+      </div>
+      <canvas id="cam-canvas" style="display:none"></canvas>
+    </div>
+
+    <!-- Form -->
+    <div class="form-panel">
+      <h2>📋 Visitor Details</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>FULL NAME *</label>
+          <input type="text" id="f-name" placeholder="Juan dela Cruz"/>
+        </div>
+        <div class="form-group">
+          <label>COMPANY / ORGANIZATION</label>
+          <input type="text" id="f-company" placeholder="Company or Organization"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>EMAIL</label>
+          <input type="email" id="f-email" placeholder="email@example.com"/>
+        </div>
+        <div class="form-group">
+          <label>PHONE</label>
+          <input type="tel" id="f-phone" placeholder="+63 9XX XXX XXXX"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>PURPOSE OF VISIT *</label>
+        <select id="f-purpose">
+          <option value="">Select purpose…</option>
+          <option>Visiting Resident</option>
+          <option>Delivery / Courier</option>
+          <option>Maintenance / Repair</option>
+          <option>Real Estate Viewing</option>
+          <option>Business Meeting</option>
+          <option>Service Provider</option>
+          <option>Guest / Family Visit</option>
+          <option>Others</option>
+        </select>
+      </div>
+      <div class="form-group" id="other-purpose-group" style="display:none;">
+        <label>SPECIFY OTHER PURPOSE *</label>
+        <input type="text" id="f-other-purpose" placeholder="Please specify your purpose of visit"/>
+      </div>
+      <div id="result-box" class="result-box"></div>
+      <div style="margin-top:1.25rem">
+        <button class="btn btn-primary" id="btn-register" style="width:100%;justify-content:center;padding:.75rem">
+          ✅ Register Visitor
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Text-to-speech function - DISABLED
+function speak(text) {
+  // Voice announcements disabled
+  return;
+}
+
+// Load voices when available - DISABLED
+// speechSynthesis.addEventListener('voiceschanged', () => {
+//   // Voices are now loaded
+// });
+
+let stream, capturedPhoto = null;
+
+const video   = document.getElementById('cam-video');
+const preview = document.getElementById('cam-preview');
+const canvas  = document.getElementById('cam-canvas');
+const dot     = document.getElementById('cam-status-dot');
+const statusT = document.getElementById('cam-status-text');
+const btnCap  = document.getElementById('btn-capture');
+const btnRet  = document.getElementById('btn-retake');
+const result  = document.getElementById('result-box');
+
+async function startCamera() {
+  console.log('Starting camera...');
+  
+  // Check if all DOM elements exist
+  if (!video) {
+    console.error('Video element not found');
+    return;
+  }
+  if (!statusT) {
+    console.error('Status text element not found');
+    return;
+  }
+  if (!dot) {
+    console.error('Status dot element not found');
+    return;
+  }
+  
+  try {
+    console.log('Requesting camera access...');
+    stream = await navigator.mediaDevices.getUserMedia({video:{width:640,height:480},audio:false});
+    console.log('Camera access granted, setting up video...');
+    video.srcObject = stream;
+    dot.classList.add('live');
+    statusT.textContent = 'Camera live — position face in frame';
+    btnCap.disabled = false;
+    console.log('Camera setup complete');
+  } catch(e) {
+    console.error('Camera error:', e);
+    statusT.textContent = 'Camera access denied or unavailable.';
+    dot.style.background = 'var(--danger)';
+  }
+}
+
+btnCap.addEventListener('click', async () => {
+  canvas.width  = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  capturedPhoto = canvas.toDataURL('image/jpeg', .9);
+  
+  // Show loading state
+  btnCap.textContent = '🔍 Checking...';
+  btnCap.disabled = true;
+  statusT.textContent = 'Checking if face already exists...';
+  
+  try {
+    // Check if face already exists in database
+    const checkResponse = await fetch('/api/check_face', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ photo: capturedPhoto })
+    });
+    
+    const checkData = await checkResponse.json();
+    
+    if (checkData.demo) {
+      showResult('error', 'DeepFace not installed. Running in demo mode.');
+      btnCap.textContent = '📸 Capture';
+      btnCap.disabled = false;
+      statusT.textContent = 'Demo mode - face checking unavailable';
+      return;
+    }
+    
+    if (!checkData.success) {
+      if (checkData.face_exists) {
+        if (checkData.blocked) {
+          // Blocked visitor trying to register
+          showResult('error', `🚫 ${checkData.message}`);
+          btnCap.textContent = '📸 Capture';
+          btnCap.disabled = false;
+          statusT.textContent = 'Access denied - visitor is blocked';
+          capturedPhoto = null;
+          
+          // Professional security announcement
+          speak('Access denied. This individual is restricted from registering. Please contact building security.');
+          
+          // Show security warning
+          setTimeout(() => {
+            const resultBox = document.getElementById('result-box');
+            if (resultBox) {
+              resultBox.innerHTML += '<br><br><strong>⚠️ Security Alert:</strong> This person is not authorized to register.';
+            }
+          }, 100);
+          return;
+        } else {
+          // Face already registered (active user)
+          showResult('error', `${checkData.message} (Confidence: ${checkData.visitor.confidence}%)`);
+          btnCap.textContent = '📸 Capture';
+          btnCap.disabled = false;
+          statusT.textContent = 'Face already registered - use Face ID Check-In instead';
+          capturedPhoto = null;
+          
+          // Professional existing user announcement
+          speak('You are already registered in our system. Please proceed to the Face ID check-in terminal.');
+          
+          // Add helpful link to check-in page
+          setTimeout(() => {
+            const resultBox = document.getElementById('result-box');
+            if (resultBox) {
+              resultBox.innerHTML += '<br><br><a href="/checkin" style="color: #ef4444; text-decoration: underline;">Go to Face ID Check-In →</a>';
+            }
+          }, 100);
+          return;
+        }
+      } else {
+        // Face detection issues
+        showResult('error', checkData.message);
+        btnCap.textContent = '📸 Capture';
+        btnCap.disabled = false;
+        statusT.textContent = 'Face detection failed - try again';
+        capturedPhoto = null;
+        return;
+      }
+    }
+    
+    // Face is new and valid - proceed with capture
+    preview.src = capturedPhoto;
+    preview.style.display = 'block';
+    document.getElementById('scan-line').style.display = 'none';
+    btnCap.style.display = 'none';
+    btnRet.style.display = 'flex';
+    statusT.textContent = '✅ New face verified - fill in details and register.';
+    showResult('success', 'Face verified successfully! Please complete the registration form.');
+    
+    // Professional verification success announcement
+    speak('Face verification successful. Please complete the registration form with your details.');
+    
+  } catch (error) {
+    showResult('error', 'Connection error. Please check if the server is running.');
+    btnCap.textContent = '📸 Capture';
+    btnCap.disabled = false;
+    statusT.textContent = 'Connection error - try again';
+    capturedPhoto = null;
+    speak('System connection error. Please try again or contact building management.');
+  }
+});
+
+btnRet.addEventListener('click', () => {
+  capturedPhoto = null;
+  preview.style.display = 'none';
+  document.getElementById('scan-line').style.display = 'block';
+  btnCap.style.display = 'flex';
+  btnCap.textContent = '📸 Capture';
+  btnCap.disabled = false;
+  btnRet.style.display = 'none';
+  statusT.textContent = 'Camera live — capture again.';
+  // Clear any result messages
+  result.style.display = 'none';
+});
+
+document.getElementById('btn-register').addEventListener('click', async () => {
+  const name    = document.getElementById('f-name').value.trim();
+  const email   = document.getElementById('f-email').value.trim();
+  const phone   = document.getElementById('f-phone').value.trim();
+  let purpose   = document.getElementById('f-purpose').value;
+  const company = document.getElementById('f-company').value.trim();
+  const otherPurpose = document.getElementById('f-other-purpose').value.trim();
+
+  result.className = 'result-box'; result.style.display = 'none';
+
+  if (!name)          { showResult('error', 'Please enter a name.'); speak('Please enter your full name to continue registration.'); return; }
+  if (!capturedPhoto) { showResult('error', 'Please capture a photo first.'); speak('Please capture your photo using the camera before proceeding.'); return; }
+  if (!purpose)       { showResult('error', 'Please select a purpose of visit.'); speak('Please select your purpose of visit from the dropdown menu.'); return; }
+  
+  // Handle "Others" purpose
+  if (purpose === 'Others') {
+    if (!otherPurpose) { 
+      showResult('error', 'Please specify your purpose of visit.'); 
+      speak('Please specify your purpose of visit in the text field.');
+      return; 
+    }
+    purpose = `Others: ${otherPurpose}`;
+  }
+
+  const btn = document.getElementById('btn-register');
+  btn.textContent = '⏳ Registering…'; btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/register', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name, email, phone, purpose, company, photo: capturedPhoto})
+    });
+    const data = await res.json();
+    if (data.success) {
+      showResult('success', `${data.message} (ID: ${data.uuid.slice(0,8)}…)`);
+      // Professional success announcement
+      speak('Registration completed successfully. Welcome to Avida Towers New Manila. You may now use the Face ID check-in system.');
+      document.getElementById('f-name').value = '';
+      document.getElementById('f-email').value = '';
+      document.getElementById('f-phone').value = '';
+      document.getElementById('f-purpose').value = '';
+      document.getElementById('f-company').value = '';
+      document.getElementById('f-other-purpose').value = '';
+      document.getElementById('other-purpose-group').style.display = 'none';
+      btnRet.click();
+    } else {
+      showResult('error', data.message);
+      speak('Registration failed. Please verify your information and try again.');
+    }
+  } catch(e) {
+    showResult('error', 'Server error. Is Flask running?');
+    speak('System error occurred. Please contact building management for assistance.');
+  }
+  btn.textContent = '✅ Register Visitor'; btn.disabled = false;
+});
+
+// Handle purpose selection change
+document.getElementById('f-purpose').addEventListener('change', function() {
+  const otherGroup = document.getElementById('other-purpose-group');
+  if (this.value === 'Others') {
+    otherGroup.style.display = 'block';
+    document.getElementById('f-other-purpose').focus();
+  } else {
+    otherGroup.style.display = 'none';
+    document.getElementById('f-other-purpose').value = '';
+  }
+});
+
+function showResult(type, msg) {
+  result.className = `result-box ${type}`;
+  result.textContent = msg;
+  result.style.display = 'block';
+}
+
+// Wait for DOM to be fully loaded before starting camera
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM loaded, starting camera in 1 second...');
+  setTimeout(startCamera, 1000);
+});
+
+// Also call it directly in case DOMContentLoaded already fired
+if (document.readyState === 'loading') {
+  // DOM is still loading
+} else {
+  // DOM is already loaded
+  console.log('DOM already loaded, starting camera immediately...');
+  startCamera();
+}
+</script>
+{% endblock %}

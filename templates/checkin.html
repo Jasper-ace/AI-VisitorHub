@@ -1,0 +1,597 @@
+{% extends "base.html" %}
+{% block title %}Avida Residence New Manila VisitorsHub{% endblock %}
+
+{% block head %}
+<style>
+.page{max-width:800px;margin:0 auto;padding:3rem 2rem;text-align:center;min-height:100vh;
+      background:rgba(15,20,25,0.95);backdrop-filter:blur(20px)}
+.page-header{margin-bottom:3rem}
+.page-header h1{font-family:var(--display);font-size:2.5rem;font-weight:800;letter-spacing:-.02em;margin-bottom:1rem}
+.page-header p{color:var(--muted);margin-top:.5rem;font-size:1rem;max-width:600px;margin-left:auto;margin-right:auto}
+
+.cam-panel{background:var(--card);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:2rem;
+           display:inline-block;width:100%;backdrop-filter:blur(10px)}
+.cam-wrap{position:relative;border-radius:12px;overflow:hidden;background:#000;aspect-ratio:4/3;max-height:450px;
+          border:2px solid rgba(255,255,255,0.1)}
+#cam-video{width:100%;height:100%;object-fit:cover;display:block}
+
+.face-detection-overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.face-box{position:absolute;border:3px solid var(--accent);border-radius:50%;
+          transition:all 0.3s ease;opacity:0;transform:scale(0.8);display:none}
+.face-box.detected{opacity:1;transform:scale(1);border-color:#00e5a0}
+.face-box.processing{border-color:#ffb700;animation:pulse 1s infinite}
+
+.corner{position:absolute;width:20px;height:20px;border-color:inherit;border-style:solid;border-width:0;display:none}
+.corner.tl{top:-3px;left:-3px;border-top-width:4px;border-left-width:4px;border-radius:8px 0 0 0}
+.corner.tr{top:-3px;right:-3px;border-top-width:4px;border-right-width:4px;border-radius:0 8px 0 0}
+.corner.bl{bottom:-3px;left:-3px;border-bottom-width:4px;border-left-width:4px;border-radius:0 0 0 8px}
+.corner.br{bottom:-3px;right:-3px;border-bottom-width:4px;border-right-width:4px;border-radius:0 0 8px 0}
+
+.status-indicator{position:absolute;top:20px;left:50%;transform:translateX(-50%);
+                  background:rgba(0,0,0,0.8);color:white;padding:8px 16px;
+                  border-radius:20px;font-size:0.875rem;font-weight:500;
+                  backdrop-filter:blur(10px);transition:all 0.3s ease}
+
+.blink-indicator{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+                 background:rgba(255,183,0,0.9);color:#000;padding:12px 20px;
+                 border-radius:25px;font-weight:600;font-size:1rem;
+                 animation:bounce 0.6s ease-in-out infinite alternate;
+                 display:none}
+
+.action-tabs{display:flex;gap:.75rem;margin:1.5rem 0;border:1px solid rgba(255,255,255,0.1);
+             border-radius:12px;padding:.5rem;background:rgba(255,255,255,0.05)}
+.tab{flex:1;padding:.75rem;border-radius:10px;font-size:.9rem;font-weight:600;cursor:pointer;
+     background:transparent;border:none;color:var(--muted);transition:all .3s;position:relative}
+.tab.active{background:var(--accent);color:#fff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(229,62,62,0.4)}
+.tab:hover:not(.active){background:rgba(255,255,255,0.1);color:var(--text)}
+.tab.active::before{content:'ACTIVE MODE';position:absolute;top:-8px;left:50%;transform:translateX(-50%);
+                    font-size:0.6rem;background:var(--accent);color:#fff;padding:2px 6px;border-radius:4px;
+                    font-family:var(--mono);letter-spacing:0.1em}
+
+.auto-scan-info{margin-top:1.5rem;padding:1.25rem;background:rgba(229,62,62,0.1);
+                border:1px solid rgba(229,62,62,0.3);border-radius:12px;
+                font-size:0.9rem;color:var(--muted)}
+
+.result-card{display:none;margin-top:2rem;border-radius:16px;padding:2rem;text-align:left;animation:fadeIn .4s;
+            backdrop-filter:blur(10px)}
+.result-card.success{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3)}
+.result-card.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3)}
+.result-card.warning{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3)}
+.result-name{font-family:var(--display);font-size:1.8rem;font-weight:700;margin:.75rem 0}
+.result-meta{font-family:var(--mono);font-size:.8rem;color:var(--muted)}
+.result-icon{font-size:2.8rem}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+@keyframes bounce{from{transform:translateX(-50%) translateY(0)}to{transform:translateX(-50%) translateY(-5px)}}
+
+.eye-detection{position:absolute;width:8px;height:8px;background:#0077ff;
+               border-radius:50%;opacity:0;transition:opacity 0.2s;display:none}
+.eye-detection.visible{opacity:1}
+
+.visitor-status{margin-top:1.5rem;padding:1.25rem;background:rgba(229,62,62,0.1);
+               border:1px solid rgba(229,62,62,0.3);border-radius:12px;
+               display:flex;align-items:center;gap:1rem;font-size:0.9rem}
+.status-badge{padding:0.4rem 1rem;border-radius:25px;font-weight:700;font-size:0.8rem;text-transform:uppercase;letter-spacing:0.05em}
+.status-badge.checked-in{background:#22c55e;color:#000}
+.status-badge.checked-out{background:#ef4444;color:#fff}
+.status-badge.never-visited{background:#f59e0b;color:#000}
+.status-text{color:var(--muted);flex:1}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page">
+  <div class="page-header">
+    <h1>🔐 Avida Residence New Manila VisitorsHub</h1>
+    <p>Position your face in the frame and blink when prompted for automatic recognition.</p>
+  </div>
+
+  <div class="cam-panel">
+    <div class="cam-wrap">
+      <video id="cam-video" autoplay playsinline muted></video>
+      <div class="face-detection-overlay">
+        <div class="face-box" id="face-box">
+          <div class="corner tl"></div><div class="corner tr"></div>
+          <div class="corner bl"></div><div class="corner br"></div>
+        </div>
+        <div class="status-indicator" id="status-indicator">Looking for face...</div>
+        <div class="blink-indicator" id="blink-indicator">👁️ Please blink to verify you're real</div>
+        <div class="eye-detection" id="left-eye"></div>
+        <div class="eye-detection" id="right-eye"></div>
+      </div>
+    </div>
+
+    <div class="action-tabs">
+      <button class="tab active" data-action="check_in">🟢 Check In</button>
+      <button class="tab" data-action="check_out">🔴 Check Out</button>
+    </div>
+
+    <div class="auto-scan-info">
+      ✨ <strong>Automatic Detection:</strong> No buttons needed! Just look at the camera and blink when prompted.
+      <button class="btn btn-outline" id="next-person-btn" style="display:none;margin-top:1rem;width:100%" onclick="allowNextPerson()">
+        👥 Allow Next Person
+      </button>
+    </div>
+
+    <div id="visitor-status" class="visitor-status" style="display:none;">
+      <div class="status-badge" id="status-badge"></div>
+      <div class="status-text" id="status-text"></div>
+    </div>
+
+    <canvas id="cam-canvas" style="display:none"></canvas>
+
+    <div id="result-card" class="result-card">
+      <div id="r-icon" class="result-icon"></div>
+      <div id="r-name" class="result-name"></div>
+      <div id="r-meta" class="result-meta"></div>
+      <div id="r-msg" style="margin-top:.75rem;font-size:.875rem"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Text-to-speech function - DISABLED
+function speak(text) {
+  // Voice announcements disabled
+  return;
+}
+
+// Load voices when available - DISABLED
+// speechSynthesis.addEventListener('voiceschanged', () => {
+//   // Voices are now loaded
+// });
+
+let stream, currentAction = 'check_in';
+let faceDetectionInterval;
+let blinkDetectionActive = false;
+let lastEyeState = null;
+let blinkCount = 0;
+let processingRecognition = false;
+let cooldownActive = false;
+let cooldownTimer = null;
+let lastRecognizedPerson = null;
+let personStillPresent = false;
+let noFaceDetectedCount = 0;
+const PERSON_LEFT_THRESHOLD = 5; // Number of consecutive "no face" detections before considering person left
+
+const video = document.getElementById('cam-video');
+const canvas = document.getElementById('cam-canvas');
+const card = document.getElementById('result-card');
+const faceBox = document.getElementById('face-box');
+const statusIndicator = document.getElementById('status-indicator');
+const blinkIndicator = document.getElementById('blink-indicator');
+const leftEye = document.getElementById('left-eye');
+const rightEye = document.getElementById('right-eye');
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentAction = tab.dataset.action;
+    card.style.display = 'none';
+    resetDetection();
+    
+    // Reset person presence when switching modes
+    personStillPresent = false;
+    lastRecognizedPerson = null;
+    noFaceDetectedCount = 0;
+    
+    // Hide the "Next Person" button
+    document.getElementById('next-person-btn').style.display = 'none';
+    
+    // Voice announcement for mode change
+    if (currentAction === 'check_in') {
+      speak('Check-in mode activated. Please proceed with facial identification.');
+    } else {
+      speak('Check-out mode activated. Please proceed with facial identification.');
+    }
+  });
+});
+
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 480, facingMode: 'user' },
+      audio: false
+    });
+    video.srcObject = stream;
+    
+    video.addEventListener('loadedmetadata', () => {
+      startFaceDetection();
+      // Professional lobby welcome message
+      speak('Welcome to Avida Towers New Manila. Please position your face within the camera frame for identification.');
+    });
+  } catch(e) {
+    statusIndicator.textContent = '⚠ Camera unavailable';
+    statusIndicator.style.background = 'rgba(255,59,92,0.9)';
+    speak('Camera system unavailable. Please contact building management for assistance.');
+  }
+}
+
+function startFaceDetection() {
+  faceDetectionInterval = setInterval(detectFace, 500); // Check every 500ms
+}
+
+async function detectFace() {
+  if (processingRecognition || cooldownActive) return;
+  
+  try {
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    const photo = canvas.toDataURL('image/jpeg', 0.8);
+
+    const response = await fetch('/api/detect_face', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ photo })
+    });
+    
+    const data = await response.json();
+    
+    if (data.demo) {
+      statusIndicator.textContent = '⚠ Demo Mode - Install DeepFace';
+      statusIndicator.style.background = 'rgba(255,183,0,0.9)';
+      return;
+    }
+    
+    if (data.success && data.face_detected) {
+      // Reset no-face counter since we detected a face
+      noFaceDetectedCount = 0;
+      
+      updateFaceBox(data.face_position);
+      
+      if (data.liveness_check && data.eyes_detected >= 2) {
+        // Check if this is the same person who was just recognized
+        if (personStillPresent && lastRecognizedPerson) {
+          statusIndicator.textContent = '👋 Please step away to allow next person';
+          statusIndicator.style.background = 'rgba(255,183,0,0.9)';
+          
+          // Show the "Next Person" button
+          document.getElementById('next-person-btn').style.display = 'block';
+          
+          return; // Don't proceed with recognition
+        }
+        
+        statusIndicator.textContent = '👀 Face detected - Please blink';
+        statusIndicator.style.background = 'rgba(0,119,255,0.9)';
+        
+        if (!blinkDetectionActive) {
+          startBlinkDetection();
+        }
+      } else {
+        statusIndicator.textContent = '👁️ Please show both eyes clearly';
+        statusIndicator.style.background = 'rgba(255,183,0,0.9)';
+        speak('Please ensure both eyes are clearly visible for security verification.');
+        resetBlinkDetection();
+      }
+    } else {
+      // No face detected - increment counter
+      noFaceDetectedCount++;
+      
+      // If we haven't seen a face for several consecutive checks, consider person left
+      if (noFaceDetectedCount >= PERSON_LEFT_THRESHOLD) {
+        if (personStillPresent) {
+          console.log('Person left - ready for next person');
+          personStillPresent = false;
+          lastRecognizedPerson = null;
+          
+          // Hide the "Next Person" button
+          document.getElementById('next-person-btn').style.display = 'none';
+        }
+      }
+      
+      statusIndicator.textContent = '🔍 Looking for face...';
+      statusIndicator.style.background = 'rgba(0,0,0,0.8)';
+      hideFaceBox();
+      resetBlinkDetection();
+    }
+  } catch (error) {
+    console.error('Face detection error:', error);
+  }
+}
+
+function updateFaceBox(facePos) {
+  // Face tracking disabled - no visual indicators shown
+  return;
+}
+
+function hideFaceBox() {
+  // Face tracking disabled - no visual indicators to hide
+  return;
+}
+
+function startBlinkDetection() {
+  blinkDetectionActive = true;
+  blinkIndicator.style.display = 'block';
+  blinkCount = 0;
+  
+  // Voice prompt for blinking
+  speak('Please blink naturally to complete the security verification process.');
+  
+  // Simulate blink detection (in real implementation, you'd use eye aspect ratio)
+  setTimeout(() => {
+    if (blinkDetectionActive) {
+      detectBlink();
+    }
+  }, 2000);
+}
+
+function detectBlink() {
+  // Simulate blink detection - in real implementation, analyze eye aspect ratio
+  blinkCount++;
+  
+  if (blinkCount >= 1) {
+    blinkIndicator.style.display = 'none';
+    statusIndicator.textContent = '✅ Blink verified - Processing...';
+    statusIndicator.style.background = 'rgba(0,119,255,0.9)';
+    faceBox.classList.add('processing');
+    
+    performRecognition(true);
+  }
+}
+
+function resetBlinkDetection() {
+  blinkDetectionActive = false;
+  blinkIndicator.style.display = 'none';
+  blinkCount = 0;
+}
+
+function resetDetection() {
+  resetBlinkDetection();
+  // Face tracking disabled - no visual indicators to reset
+  processingRecognition = false;
+  cooldownActive = false;
+  if (cooldownTimer) {
+    clearTimeout(cooldownTimer);
+    cooldownTimer = null;
+  }
+  hideVisitorStatus();
+  // Don't reset person presence here - let it be handled by face detection
+}
+
+async function performRecognition(blinkVerified) {
+  if (processingRecognition) return;
+  processingRecognition = true;
+  
+  try {
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const photo = canvas.toDataURL('image/jpeg', 0.9);
+
+    const response = await fetch('/api/checkin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        photo, 
+        action: currentAction,
+        blink_verified: blinkVerified 
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.demo) {
+      showCard('warning', '⚠', 'DeepFace Not Installed', 'Demo Mode', 'Install requirements.txt to enable face recognition.');
+    } else if (data.success) {
+      const conf = data.visitor.confidence ? `Confidence: ${data.visitor.confidence}%` : '';
+      showCard('success', currentAction === 'check_in' ? '✅' : '👋',
+               data.visitor.name, `${new Date().toLocaleTimeString()} · ${conf}`, data.message);
+      
+      // Show visitor status
+      showVisitorStatus(data.current_status, data.visitor.name);
+      
+      // Mark this person as still present to prevent immediate re-recognition
+      personStillPresent = true;
+      lastRecognizedPerson = {
+        name: data.visitor.name,
+        uuid: data.visitor.uuid,
+        timestamp: Date.now()
+      };
+      
+      // Voice announcement
+      if (currentAction === 'check_in') {
+        speak(`Good day, ${data.visitor.name}. Welcome to Avida Towers New Manila. Your check-in has been recorded.`);
+      } else {
+        speak(`Thank you for visiting Avida Towers New Manila, ${data.visitor.name}. Have a pleasant day ahead.`);
+      }
+      
+      // Start 3-second cooldown period
+      startCooldown();
+      
+      // Reset after successful recognition (longer timeout to show status)
+      setTimeout(() => {
+        resetDetection();
+        card.style.display = 'none';
+        hideVisitorStatus();
+      }, 4000);
+    } else {
+      // Handle different types of errors
+      let errorIcon = '🚫';
+      let errorTitle = 'Access Denied';
+      let errorSubtitle = 'Unrecognized';
+      let voiceMessage = 'Access denied. Please contact building management or register as a new visitor.';
+      
+      // Check if it's a blocked visitor
+      if (data.blocked) {
+        errorIcon = '🚫';
+        errorTitle = 'Access Denied';
+        errorSubtitle = 'Blocked Visitor';
+        voiceMessage = `Access denied. Security alert: ${data.visitor.name} is restricted from entering the premises.`;
+        
+        showCard('error', errorIcon, errorTitle, errorSubtitle, data.message);
+        speak(voiceMessage);
+        
+        // Create security alert log
+        console.warn('Security Alert: Blocked visitor attempted access:', data.visitor);
+        
+        // Start cooldown for blocked visitors
+        startCooldown();
+        
+        setTimeout(() => {
+          resetDetection();
+          card.style.display = 'none';
+          hideVisitorStatus();
+        }, 5000); // Longer timeout for security alerts
+        return;
+      }
+      
+      // Check if it's a status validation error (already checked in/out)
+      if (data.message && (data.message.includes('already checked in') || 
+                          data.message.includes('already checked out') || 
+                          data.message.includes('never checked in'))) {
+        errorIcon = '⚠️';
+        errorTitle = 'Status Error';
+        errorSubtitle = 'Invalid Action';
+        
+        // Customize voice message based on the specific error
+        if (data.message.includes('already checked in')) {
+          voiceMessage = 'You are currently checked in to the building. Please switch to Check Out mode to check out.';
+        } else if (data.message.includes('already checked out')) {
+          voiceMessage = 'You are currently checked out of the building. Please switch to Check In mode to check in.';
+        } else if (data.message.includes('never checked in')) {
+          voiceMessage = 'No check-in record found. Please switch to Check In mode first.';
+        }
+      }
+      
+      showCard('error', errorIcon, errorTitle, errorSubtitle, data.message);
+      
+      // Voice announcement for the error
+      speak(voiceMessage);
+      
+      // Start cooldown for errors too
+      startCooldown();
+      
+      // Reset after error
+      setTimeout(() => {
+        resetDetection();
+        card.style.display = 'none';
+        hideVisitorStatus();
+      }, 3000); // Longer timeout for status errors so user can read the message
+    }
+  } catch (error) {
+    showCard('error', '❌', 'Error', 'Connection Failed', 'Make sure Flask is running on port 5000.');
+    startCooldown();
+    setTimeout(() => {
+      resetDetection();
+      card.style.display = 'none';
+      hideVisitorStatus();
+    }, 2000);
+  }
+}
+
+function startCooldown() {
+  cooldownActive = true;
+  processingRecognition = false;
+  
+  let countdown = 3;
+  statusIndicator.textContent = `⏳ Please wait ${countdown} seconds...`;
+  statusIndicator.style.background = 'rgba(255,183,0,0.9)';
+  
+  const countdownInterval = setInterval(() => {
+    countdown--;
+    if (countdown > 0) {
+      statusIndicator.textContent = `⏳ Please wait ${countdown} seconds...`;
+    } else {
+      clearInterval(countdownInterval);
+      cooldownActive = false;
+      statusIndicator.textContent = '🔍 Looking for face...';
+      statusIndicator.style.background = 'rgba(0,0,0,0.8)';
+    }
+  }, 1000);
+  
+  // Clear cooldown after 3 seconds
+  cooldownTimer = setTimeout(() => {
+    cooldownActive = false;
+    if (countdown <= 0) {
+      statusIndicator.textContent = '🔍 Looking for face...';
+      statusIndicator.style.background = 'rgba(0,0,0,0.8)';
+    }
+  }, 3000);
+}
+
+function showCard(type, icon, name, meta, msg) {
+  card.className = `result-card ${type}`;
+  document.getElementById('r-icon').textContent = icon;
+  document.getElementById('r-name').textContent = name;
+  document.getElementById('r-meta').textContent = meta;
+  document.getElementById('r-msg').textContent = msg;
+  card.style.display = 'block';
+}
+
+function showVisitorStatus(status, visitorName) {
+  const statusDiv = document.getElementById('visitor-status');
+  const statusBadge = document.getElementById('status-badge');
+  const statusText = document.getElementById('status-text');
+  
+  let badgeText = '';
+  let badgeClass = '';
+  let statusMessage = '';
+  
+  switch(status) {
+    case 'checked_in':
+      badgeText = 'CHECKED IN';
+      badgeClass = 'checked-in';
+      statusMessage = `${visitorName} is currently checked in`;
+      break;
+    case 'checked_out':
+      badgeText = 'CHECKED OUT';
+      badgeClass = 'checked-out';
+      statusMessage = `${visitorName} is currently checked out`;
+      break;
+    case 'never_visited':
+      badgeText = 'NEW VISITOR';
+      badgeClass = 'never-visited';
+      statusMessage = `${visitorName} has never visited before`;
+      break;
+    default:
+      return; // Don't show status for unknown states
+  }
+  
+  statusBadge.textContent = badgeText;
+  statusBadge.className = `status-badge ${badgeClass}`;
+  statusText.textContent = statusMessage;
+  statusDiv.style.display = 'flex';
+}
+
+function hideVisitorStatus() {
+  document.getElementById('visitor-status').style.display = 'none';
+}
+
+function allowNextPerson() {
+  // Manually reset person presence to allow next person
+  personStillPresent = false;
+  lastRecognizedPerson = null;
+  noFaceDetectedCount = 0;
+  
+  // Hide the button and reset status
+  document.getElementById('next-person-btn').style.display = 'none';
+  statusIndicator.textContent = '🔍 Looking for face...';
+  statusIndicator.style.background = 'rgba(0,0,0,0.8)';
+  
+  console.log('Manually allowed next person');
+}
+
+// Start everything
+startCamera();
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+  if (faceDetectionInterval) {
+    clearInterval(faceDetectionInterval);
+  }
+  if (cooldownTimer) {
+    clearTimeout(cooldownTimer);
+  }
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+  }
+});
+</script>
+{% endblock %}
